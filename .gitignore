@@ -1,0 +1,16 @@
+# IDE specific
+.vscode/
+.idea/
+
+# Target dir
+target/
+
+# Lockfile
+Cargo.lock
+
+# Local files used for testing
+conf.env
+run.sh
+
+# OS specific stuff
+.DS_Store

@@ -1,0 +1,15 @@
+[package]
+name = "crabot"
+version = "0.1.0"
+authors = ["Andreas Rubik <rubikandreas@gmail.com>"]
+
+[dependencies]
+kankyo = "~0.2"
+reqwest = "0.8.5"
+typemap = "~0.3"
+tempfile = "3"
+
+[dependencies.serenity]
+version = "0.5"
+git = "https://github.com/zeyla/serenity.git"
+features = ["cache", "framework", "standard_framework", "voice"]
