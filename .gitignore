@@ -11,6 +11,7 @@ Cargo.lock
 # Local files used for testing
 conf.env
 run.sh
+update.sh
 
 # OS specific stuff
 .DS_Store
