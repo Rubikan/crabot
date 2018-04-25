@@ -8,9 +8,10 @@ target/
 # Lockfile
 Cargo.lock
 
-# Local files used for testing
+# Local files used for testing & deployed bot
 conf.env
-run.sh
+start.sh
+stop.sh
 update.sh
 
 # OS specific stuff
