@@ -7,6 +7,7 @@ use serenity::voice;
 use std::env;
 use std::io::BufWriter;
 use std::io::copy;
+use std::io::stdout;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
@@ -16,15 +17,21 @@ command!(tts(ctx, msg, args) {
     let mut response = reqwest::get(&format!("https://api.voicerss.org/?key={}&hl={}&src={}", key, "de-de", src))
     .expect("Failed to send request");
 
+    println!("===== Response for {} =====", src);
     println!("{}", response.status());
     for header in response.headers().iter() {
         println!("{}: {}", header.name(), header.value_string());
     }
+    println!("===== Response end =====");
     
     let mut tmpfile = NamedTempFile::new()?;
     let mut writer = BufWriter::new(&tmpfile);
     copy(&mut response, &mut writer).expect("Failed to save response to tempfile");
     writer.flush().unwrap();
+    println!("Saved temporary tts-file to {:?}", &tmpfile.path());
+    println!("Content of temporary file:");
+    let mut stdout = stdout();
+    copy(&mut response, &mut stdout).expect("Failed to copy response to stdout");
 
     let guild_id = get_guild_id(msg.channel_id);
 
@@ -46,7 +53,7 @@ command!(tts(ctx, msg, args) {
     }
 });
 
-command!(ytdl(ctx, msg, args) {
+command!(yt(ctx, msg, args) {
     let url = match args.single::<String>() {
         Ok(url) => url,
         Err(_) => {

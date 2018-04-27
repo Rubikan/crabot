@@ -59,7 +59,7 @@ fn main() {
         .command("join", |c| c.cmd(commands::channels::join))
         .command("leave", |c| c.cmd(commands::channels::leave))
         .command("tts", |c| c.cmd(commands::sound::tts))
-        .command("ytdl", |c| c.cmd(commands::sound::ytdl)));
+        .command("yt", |c| c.cmd(commands::sound::yt)));
 
     if let Err(why) = client.start() {
         println!("Client error: {:?}", why);
