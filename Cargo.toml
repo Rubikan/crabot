@@ -8,6 +8,8 @@ kankyo = "~0.2"
 reqwest = "0.8.5"
 typemap = "~0.3"
 tempfile = "3"
+timer = "0.2.0"
+chrono = "0.4"
 
 [dependencies.serenity]
 version = "0.5"

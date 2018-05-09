@@ -4,8 +4,11 @@ extern crate reqwest;
 extern crate serenity;
 extern crate tempfile;
 extern crate typemap;
+extern crate timer;
+extern crate chrono;
 
 mod commands;
+mod tasks;
 
 use std::env;
 use std::fs::File;
@@ -20,6 +23,7 @@ use serenity::model::id::GuildId;
 use serenity::prelude::Mutex;
 use serenity::Result as SerenityResult;
 use serenity::framework::StandardFramework;
+use timer::Timer;
 use typemap::Key;
 
 struct Handler;
@@ -59,10 +63,21 @@ fn main() {
         .command("join", |c| c.cmd(commands::channels::join))
         .command("leave", |c| c.cmd(commands::channels::leave))
         .command("tts", |c| c.cmd(commands::sound::tts))
-        .command("yt", |c| c.cmd(commands::sound::yt)));
+        .command("yt", |c| c.cmd(commands::sound::yt))
+        .command("gbstart", |c| c.cmd(tasks::giantbomb::gbstart))
+        .command("gbpause", |c| c.cmd(tasks::giantbomb::gbpause)));
+
+    let timer = Timer::new();
+
+    let gb_guard = {
+        timer.schedule_repeating(chrono::Duration::minutes(5), move || {
+            tasks::giantbomb::run();
+        })
+    };
 
     if let Err(why) = client.start() {
         println!("Client error: {:?}", why);
+        drop(gb_guard);
     }
 }
 
