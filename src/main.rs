@@ -1,28 +1,29 @@
 extern crate kankyo;
 extern crate reqwest;
-#[macro_use] 
+#[macro_use]
 extern crate serenity;
-extern crate tempfile;
-extern crate typemap;
-extern crate timer;
 extern crate chrono;
+extern crate tempfile;
+extern crate timer;
+extern crate typemap;
 
 mod commands;
 mod tasks;
 
-use std::env;
-use std::fs::File;
-use std::sync::Arc;
-use serenity::client::bridge::voice::ClientVoiceManager;
+use commands::sound::VolumeParameter;
+use serenity::Result as SerenityResult;
 use serenity::client::CACHE;
-use serenity::prelude::*;
+use serenity::client::bridge::voice::ClientVoiceManager;
+use serenity::framework::StandardFramework;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::id::ChannelId;
 use serenity::model::id::GuildId;
 use serenity::prelude::Mutex;
-use serenity::Result as SerenityResult;
-use serenity::framework::StandardFramework;
+use serenity::prelude::*;
+use std::env;
+use std::fs::File;
+use std::sync::Arc;
 use timer::Timer;
 use typemap::Key;
 
@@ -55,17 +56,20 @@ fn main() {
     {
         let mut data = client.data.lock();
         data.insert::<VoiceManager>(Arc::clone(&client.voice_manager));
+        data.insert::<VolumeParameter>(0.8);
     }
 
-    client.with_framework(StandardFramework::new()
-        .configure(|c| c
-            .prefix("!"))
-        .command("join", |c| c.cmd(commands::channels::join))
-        .command("leave", |c| c.cmd(commands::channels::leave))
-        .command("tts", |c| c.cmd(commands::sound::tts))
-        .command("yt", |c| c.cmd(commands::sound::yt))
-        .command("gbstart", |c| c.cmd(tasks::giantbomb::gbstart))
-        .command("gbpause", |c| c.cmd(tasks::giantbomb::gbpause)));
+    client.with_framework(
+        StandardFramework::new()
+            .configure(|c| c.prefix("!"))
+            .command("join", |c| c.cmd(commands::channels::join))
+            .command("leave", |c| c.cmd(commands::channels::leave))
+            .command("volume", |c| c.cmd(commands::sound::volume))
+            .command("tts", |c| c.cmd(commands::sound::tts))
+            .command("yt", |c| c.cmd(commands::sound::yt))
+            .command("gbstart", |c| c.cmd(tasks::giantbomb::gbstart))
+            .command("gbpause", |c| c.cmd(tasks::giantbomb::gbpause)),
+    );
 
     let timer = Timer::new();
 
@@ -88,14 +92,15 @@ fn check_msg(result: SerenityResult<Message>) {
     }
 }
 
-fn get_guild_id(channel_id: ChannelId) -> GuildId { 
-    let guild_id = match CACHE.read().guild_channel(channel_id) {
+fn get_guild_id(channel_id: ChannelId) -> GuildId {
+    match CACHE.read().guild_channel(channel_id) {
         Some(channel) => channel.read().guild_id,
         None => {
-            check_msg(channel_id.say("Error finding channel info. Groups and DMs not supported for joining."));
+            check_msg(
+                channel_id
+                    .say("Error finding channel info. Groups and DMs not supported for joining."),
+            );
             unimplemented!();
-        },
-    };
-
-    return guild_id;
+        }
+    }
 }
