@@ -1,17 +1,28 @@
+use super::super::VoiceManager;
 use super::super::check_msg;
 use super::super::get_guild_id;
-use super::super::VoiceManager;
 
 use reqwest;
 use serenity::voice;
 use std::env;
 use std::io::BufWriter;
+use std::io::Write;
 use std::io::copy;
 use std::io::stdout;
-use std::io::Write;
 use tempfile::NamedTempFile;
 
+use typemap::Key;
+
+pub struct VolumeParameter;
+
+impl Key for VolumeParameter {
+    type Value = f32;
+}
+
 command!(tts(ctx, msg, args) {
+    let data = ctx.data.lock();
+    let vol = data.get::<VolumeParameter>().unwrap_or(&1.0);
+
     let key = env::var("VOICE_RSS_KEY").expect("Expected a key for voice-rss in conf.env");
     let src: String = args.multiple::<String>().unwrap().join(" ");
     let mut response = reqwest::get(&format!("https://api.voicerss.org/?key={}&hl={}&src={}", key, "de-de", src))
@@ -47,10 +58,24 @@ command!(tts(ctx, msg, args) {
                 return Ok(());
             },
         };
-        handler.play(source);
+        let audio = handler.play_only(source);
+        let mut lock = audio.lock();
+        lock.volume(*vol);
     } else {
         check_msg(msg.channel_id.say("Not in a voice channel to play in"));
     }
+});
+
+command!(volume(ctx, msg, args) {
+    let vol = match args.single::<f32>() {
+        Ok(vol) if vol >= 0.0 && vol <= 1.0 => vol,
+        _ => {
+            check_msg(msg.channel_id.say("Volume must be between 0.0 and 1.0"));
+            return Ok(());
+        }
+    };
+    let mut data = ctx.data.lock();
+    data.insert::<VolumeParameter>(vol);
 });
 
 command!(yt(ctx, msg, args) {
@@ -61,6 +86,9 @@ command!(yt(ctx, msg, args) {
             return Ok(());
         },
     };
+
+    let data = ctx.data.lock();
+    let vol = data.get::<VolumeParameter>().unwrap_or(&1.0);
 
     if !url.starts_with("http") {
         check_msg(msg.channel_id.say("Must provide a valid URL"));
@@ -83,7 +111,10 @@ command!(yt(ctx, msg, args) {
                 return Ok(());
             },
         };
-        handler.play(source);
+
+        let audio = handler.play_only(source);
+        let mut lock = audio.lock();
+        lock.volume(*vol);
     } else {
         check_msg(msg.channel_id.say("Not in a voice channel to play in"));
     }

@@ -1,6 +1,6 @@
+use super::super::VoiceManager;
 use super::super::check_msg;
 use super::super::get_guild_id;
-use super::super::VoiceManager;
 
 use serenity::model::id::ChannelId;
 use serenity::model::misc::Mentionable;
